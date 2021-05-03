@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://unpkg.com/konva@7.2.5/konva.min.js"></script>
+        <meta charset="utf-8" />
+        <title>Konva Drop DOM element Demo</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                background-color: #f0f0f0;
+            }
+
+            #container {
+                background-color: rgba(0, 0, 0, 0.1);
+            }
+
+            p {
+                margin: 4px;
+            }
+
+            #drag-items img {
+                height: 100px;
+            }
+            #wrap {
+                position: relative;
+            }
+            .panel {
+                position: absolute;
+                height: 100%;
+                width: 20%;
+                right: 0;
+                top: 0;
+                background: #fff;
+            }
+        </style>
+    </head>
+
+    <body>
+        <p>Drag&drop yoda into the grey area.</p>
+        <div id="drag-items">
+            <img src="/images/yoda.jpg" draggable="true" />
+            <img src="/images/darth-vader.jpg" draggable="true" />
+        </div>
+        <div id="wrap">
+            <div id="container"></div>
+            <div class="panel">
+                <h2>
+                    now on layer
+                    <span class="now"></span>
+                </h2>
+            </div>
+        </div>
+        <script>
+            var width = window.innerWidth;
+            var height = window.innerHeight;
+            var stageWidth = window.innerWidth;
+            var stageHeight = window.innerHeight;
+
+            var stage = new Konva.Stage({
+                container: "container",
+                width: width,
+                height: height,
+            });
+            var layer = new Konva.Layer();
+            stage.add(layer);
+
+            // what is url of dragging element?
+            var itemURL = "";
+            document
+                .getElementById("drag-items")
+                .addEventListener("dragstart", function (e) {
+                    itemURL = e.target.src;
+                });
+
+            var con = stage.container();
+            con.addEventListener("dragover", function (e) {
+                e.preventDefault(); // !important
+            });
+
+            con.addEventListener("drop", function (e) {
+                e.preventDefault();
+                stage.setPointersPositions(e);
+
+                Konva.Image.fromURL(itemURL, function (image) {
+                    layer.add(image);
+                    image.position(stage.getPointerPosition());
+                    image.draggable(true);
+                    var nodes = [image];
+                    const tr = new Konva.Transformer({
+                        nodes: nodes,
+                        keepRatio: true,
+                        name: "object",
+                        boundBoxFunc: (oldBox, newBox) => {
+                            if (newBox.width < 10 || newBox.height < 10) {
+                                return oldBox;
+                            }
+                            return newBox;
+                        },
+                    });
+                    image.addEventListener("dragmove", function (e) {
+                        getObjectSnappingEdges(nodes);
+
+                        var objectName = this._id;
+                        console.log(objectName);
+                        document.querySelector(".now").innerHTML = objectName;
+                    });
+                    layer.add(tr);
+                    layer.draw();
+                });
+            });
+
+            function getObjectSnappingEdges(node) {
+                var box = node[0].getClientRect();
+                var absPos = node[0].absolutePosition();
+                return {
+                    vertical: [
+                        {
+                            guide: Math.round(box.x),
+                            offset: Math.round(absPos.x - box.x),
+                            snap: "start",
+                        },
+                        {
+                            guide: Math.round(box.x + box.width / 2),
+                            offset: Math.round(
+                                absPos.x - box.x - box.width / 2
+                            ),
+                            snap: "center",
+                        },
+                        {
+                            guide: Math.round(box.x + box.width),
+                            offset: Math.round(absPos.x - box.x - box.width),
+                            snap: "end",
+                        },
+                    ],
+                    horizontal: [
+                        {
+                            guide: Math.round(box.y),
+                            offset: Math.round(absPos.y - box.y),
+                            snap: "start",
+                        },
+                        {
+                            guide: Math.round(box.y + box.height / 2),
+                            offset: Math.round(
+                                absPos.y - box.y - box.height / 2
+                            ),
+                            snap: "center",
+                        },
+                        {
+                            guide: Math.round(box.y + box.height),
+                            offset: Math.round(absPos.y - box.y - box.height),
+                            snap: "end",
+                        },
+                    ],
+                };
+            }
+
+            function getLineGuideStops(node) {
+                // we can snap to stage borders and the center of the stage
+                var vertical = [0, stage.width() / 2, stage.width()];
+                var horizontal = [0, stage.height() / 2, stage.height()];
+
+                // and we snap over edges and center of each object on the canvas
+                stage.find(".object").forEach((guideItem) => {
+                    if (guideItem === skipShape) {
+                        return;
+                    }
+                    var box = guideItem.getClientRect();
+                    // and we can snap to all edges of shapes
+                    vertical.push([
+                        box.x,
+                        box.x + box.width,
+                        box.x + box.width / 2,
+                    ]);
+                    horizontal.push([
+                        box.y,
+                        box.y + box.height,
+                        box.y + box.height / 2,
+                    ]);
+                });
+                return {
+                    vertical: vertical.flat(),
+                    horizontal: horizontal.flat(),
+                };
+            }
+            function fitStageIntoParentContainer() {
+                var container = document.querySelector("#container");
+                console.log(container.offsetWidth);
+                // now we need to fit stage into parent
+                var containerWidth = container.offsetWidth;
+                // to do this we need to scale the stage
+                var scale = containerWidth / stageWidth;
+
+                stage.width(stageWidth * scale);
+                stage.height(stageHeight * scale);
+                stage.scale({ x: scale, y: scale });
+                stage.draw();
+            }
+
+            fitStageIntoParentContainer();
+            // adapt the stage on any window resize
+            window.addEventListener("resize", fitStageIntoParentContainer);
+        </script>
+    </body>
+</html>

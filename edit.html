@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+
+        <script src="https://unpkg.com/konva@7.2.5/konva.min.js"></script>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+
+                background-color: #f0f0f0;
+            }
+            * {
+                margin: 0;
+                padding: 0;
+            }
+            .canvasBlock {
+                position: relative;
+                width: 1080px;
+                height: 900px;
+                overflow-y: scroll;
+                margin: 0 auto;
+            }
+            #menu {
+                display: none;
+                position: absolute;
+                width: 60px;
+                background-color: white;
+                box-shadow: 0 0 5px grey;
+                border-radius: 3px;
+            }
+
+            #menu button {
+                width: 100%;
+                background-color: white;
+                border: none;
+                margin: 0;
+                padding: 10px;
+            }
+
+            #menu button:hover {
+                background-color: lightgray;
+            }
+            .button {
+                position: absolute;
+                box-sizing: border-box;
+                height: 100%;
+                z-index: 2;
+                background: #fff;
+                padding: 10px 10px 0 10px;
+                border: 1px solid #000;
+            }
+            .shape_panel {
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: auto;
+                height: 100%;
+                background: #fff;
+                border: 1px solid #000;
+                box-sizing: border-box;
+                padding: 10px;
+                display: flex;
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .shape_panel > div {
+                display: flex;
+                width: 150px;
+                margin-right: 20px;
+                align-items: center;
+            }
+            .shape_panel h2 {
+                margin-right: 15px;
+            }
+            .shape_panel input {
+                width: 100%;
+            }
+            #canvas {
+                /* max-width: 1080px;
+                max-height: 900px; */
+                margin: 0 auto;
+            }
+            .deg {
+                display: flex;
+                height: 100%;
+                flex-wrap: wrap;
+                flex-direction: column;
+            }
+            .deg h2 {
+                margin-bottom: 10px;
+            }
+            .deg > div button {
+                margin-top: 10px;
+                width: 100%;
+                height: 25px;
+                background: brown;
+                border: 1px solid #000;
+                padding: 0;
+                border-radius: 5px;
+                color: white;
+                display: block;
+            }
+            .chair_deg {
+                margin-top: 20px;
+            }
+            .getJson {
+                width: 100%;
+                margin-top: 100px;
+                height: 50px;
+                background: cornflowerblue;
+                border: 1px solid #000;
+                padding: 0;
+                border-radius: 5px;
+                color: white;
+            }
+            .spinner {
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 500;
+                color: white;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+        </style>
+    </head>
+    <!-- canvas setting -->
+    <!-- kiosk width : data-kw -->
+    <!-- contents height : data-kh -->
+    <!-- kiosk viewport 
+         1080 * 1920 : data-ratio=1
+         2160 * 3840 : data-ratio=2
+    -->
+    <!-- background-image : data-bg -->
+    <body
+        data-kw="2160"
+        data-kh="3000"
+        data-ratio="2"
+        data-bg="url('/images/dummy_bg.png')"
+    >
+        <div class="spinner">loading..</div>
+        <div class="button">
+            <!-- <button type="button" class="drawRect">테이블 추가</button>
+
+            <button type="button" class="drawChair">의자 추가</button> -->
+
+            <div class="deg">
+                <div class="table_deg">
+                    <h2>table create</h2>
+                    <div>
+                        각도 :
+                        <input
+                            type="text"
+                            class="input_table_deg"
+                            placeholder="각도를 입력해주세요"
+                            value="0"
+                        />
+                    </div>
+                    <button type="button" class="drawRect_deg">
+                        테이블 추가
+                    </button>
+                </div>
+                <div class="chair_deg">
+                    <h2>chair create</h2>
+                    <div>
+                        각도 :
+                        <input
+                            type="text"
+                            class="input_chair_deg"
+                            placeholder="각도를 입력해주세요"
+                            value="0"
+                        />
+                    </div>
+
+                    <button type="button" class="drawRectChair_deg">
+                        의자 추가
+                    </button>
+                </div>
+                <button type="button" class="getJson">JSON 만들기</button>
+            </div>
+        </div>
+        <div class="canvasBlock">
+            <div id="canvas"></div>
+            <div id="menu">
+                <div>
+                    <button id="delete-button">Delete</button>
+                </div>
+            </div>
+        </div>
+        <div class="shape_panel">
+            <div>
+                <h2>type</h2>
+                <p class="type"></p>
+            </div>
+            <div>
+                <h2>id</h2>
+                <p class="id"></p>
+            </div>
+        </div>
+        <script src="/test.js"></script>
+    </body>
+</html>

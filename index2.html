@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://unpkg.com/konva@7.2.5/konva.min.js"></script>
+        <meta charset="utf-8" />
+        <title>Konva Drop DOM element Demo</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                background-color: #f0f0f0;
+            }
+
+            #container {
+                background-color: rgba(0, 0, 0, 0.1);
+            }
+
+            p {
+                margin: 4px;
+            }
+
+            #drag-items img {
+                height: 100px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <p>Drag&drop yoda into the grey area.</p>
+        <div id="drag-items">
+            <img src="/images/yoda.jpg" draggable="true" />
+            <img src="/images/darth-vader.jpg" draggable="true" />
+        </div>
+        <div id="container"></div>
+        <script>
+            var width = window.innerWidth;
+            var height = window.innerHeight;
+
+            var stage = new Konva.Stage({
+                container: "container",
+                width: width,
+                height: height,
+            });
+            var layer = new Konva.Layer();
+            stage.add(layer);
+
+            var itemURL = "";
+            document
+                .getElementById("drag-items")
+                .addEventListener("dragstart", function (e) {
+                    itemURL = e.target.src;
+                });
+
+            var con = stage.container();
+            con.addEventListener("dragover", function (e) {
+                e.preventDefault(); // !important
+            });
+
+            con.addEventListener("drop", function (e) {
+                e.preventDefault();
+                stage.setPointersPositions(e);
+                var lineGuideStops = getLineGuideStops(e.target);
+                var itemBounds = getObjectSnappingEdges(e.target);
+                var guides = getGuides(lineGuideStops, itemBounds);
+                if (!guides.length) {
+                    return;
+                }
+
+                drawGuides(guides);
+                Konva.Image.fromURL(itemURL, function (image) {
+                    layer.add(image);
+                    layer.find(".guid-line").destroy();
+                    image.position(stage.getPointerPosition());
+                    image.draggable(true);
+                    layer.draw();
+                });
+            });
+
+            function getLineGuideStops(skipShape) {
+                var vertical = [0, stage.width() / 2, stage.width()];
+                var horizontal = [0, stage.height() / 2, stage.height()];
+
+                stage.find(".object").forEach((guideItem) => {
+                    if (guideItem === skipShape) {
+                        return;
+                    }
+                    var box = guideItem.getClientRect();
+                    vertical.push([
+                        box.x,
+                        box.x + box.width,
+                        box.x + box.width / 2,
+                    ]);
+                    horizontal.push([
+                        box.y,
+                        box.y + box.height,
+                        box.y + box.height / 2,
+                    ]);
+                });
+                return {
+                    vertical: vertical.flat(),
+                    horizontal: horizontal.flat(),
+                };
+            }
+
+            function getObjectSnappingEdges(node) {
+                console.log(node);
+                var box = node.getClientRect();
+                var absPos = node.absolutePosition();
+
+                return {
+                    vertical: [
+                        {
+                            guide: Math.round(box.x),
+                            offset: Math.round(absPos.x - box.x),
+                            snap: "start",
+                        },
+                        {
+                            guide: Math.round(box.x + box.width / 2),
+                            offset: Math.round(
+                                absPos.x - box.x - box.width / 2
+                            ),
+                            snap: "center",
+                        },
+                        {
+                            guide: Math.round(box.x + box.width),
+                            offset: Math.round(absPos.x - box.x - box.width),
+                            snap: "end",
+                        },
+                    ],
+                    horizontal: [
+                        {
+                            guide: Math.round(box.y),
+                            offset: Math.round(absPos.y - box.y),
+                            snap: "start",
+                        },
+                        {
+                            guide: Math.round(box.y + box.height / 2),
+                            offset: Math.round(
+                                absPos.y - box.y - box.height / 2
+                            ),
+                            snap: "center",
+                        },
+                        {
+                            guide: Math.round(box.y + box.height),
+                            offset: Math.round(absPos.y - box.y - box.height),
+                            snap: "end",
+                        },
+                    ],
+                };
+            }
+
+            // find all snapping possibilities
+            function getGuides(lineGuideStops, itemBounds) {
+                var resultV = [];
+                var resultH = [];
+
+                lineGuideStops.vertical.forEach((lineGuide) => {
+                    itemBounds.vertical.forEach((itemBound) => {
+                        var diff = Math.abs(lineGuide - itemBound.guide);
+                        // if the distance between guild line and object snap point is close we can consider this for snapping
+                        if (diff < GUIDELINE_OFFSET) {
+                            resultV.push({
+                                lineGuide: lineGuide,
+                                diff: diff,
+                                snap: itemBound.snap,
+                                offset: itemBound.offset,
+                            });
+                        }
+                    });
+                });
+
+                lineGuideStops.horizontal.forEach((lineGuide) => {
+                    itemBounds.horizontal.forEach((itemBound) => {
+                        var diff = Math.abs(lineGuide - itemBound.guide);
+                        if (diff < GUIDELINE_OFFSET) {
+                            resultH.push({
+                                lineGuide: lineGuide,
+                                diff: diff,
+                                snap: itemBound.snap,
+                                offset: itemBound.offset,
+                            });
+                        }
+                    });
+                });
+
+                var guides = [];
+
+                // find closest snap
+                var minV = resultV.sort((a, b) => a.diff - b.diff)[0];
+                var minH = resultH.sort((a, b) => a.diff - b.diff)[0];
+                if (minV) {
+                    guides.push({
+                        lineGuide: minV.lineGuide,
+                        offset: minV.offset,
+                        orientation: "V",
+                        snap: minV.snap,
+                    });
+                }
+                if (minH) {
+                    guides.push({
+                        lineGuide: minH.lineGuide,
+                        offset: minH.offset,
+                        orientation: "H",
+                        snap: minH.snap,
+                    });
+                }
+                return guides;
+            }
+
+            function drawGuides(guides) {
+                guides.forEach((lg) => {
+                    if (lg.orientation === "H") {
+                        var line = new Konva.Line({
+                            points: [-6000, 0, 6000, 0],
+                            stroke: "rgb(0, 161, 255)",
+                            strokeWidth: 1,
+                            name: "guid-line",
+                            dash: [4, 6],
+                        });
+                        layer.add(line);
+                        line.absolutePosition({
+                            x: 0,
+                            y: lg.lineGuide,
+                        });
+                        layer.batchDraw();
+                    } else if (lg.orientation === "V") {
+                        var line = new Konva.Line({
+                            points: [0, -6000, 0, 6000],
+                            stroke: "rgb(0, 161, 255)",
+                            strokeWidth: 1,
+                            name: "guid-line",
+                            dash: [4, 6],
+                        });
+                        layer.add(line);
+                        line.absolutePosition({
+                            x: lg.lineGuide,
+                            y: 0,
+                        });
+                        layer.batchDraw();
+                    }
+                });
+            }
+        </script>
+    </body>
+</html>
