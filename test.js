@@ -274,3 +274,32 @@ for (var j = 0; j < canvasHeight / gridValue; j++) {
     );
 }
 stage.add(gridLayer);
+
+document.querySelector(".save").addEventListener("click", function () {
+    var json = stage.toJSON();
+    localStorage.setItem("seatData", json);
+});
+
+// document.querySelector(".load").addEventListener("click", function () {
+//     const data = localStorage.getItem("seatData") || "[]";
+//     console.log(data);
+//     var stage = Konva.Node.create(data, "canvas");
+
+//     var stageLayer = stage.children[1].children;
+
+//     stageLayer.forEach((element, index) => {
+//         console.log(element, index);
+//         element.on("mousedown", () => {
+//             layer.draw();
+//             $(".type").innerText = element.attrs.text;
+//             $(".id").innerText = element.attrs.id;
+//         });
+//         element.on("dragmove", () => {
+//             element.position({
+//                 x: Math.round(element.x() / gridValue) * gridValue,
+//                 y: Math.round(element.y() / gridValue) * gridValue,
+//             });
+//             stage.batchDraw();
+//         });
+//     });
+// });
