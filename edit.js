@@ -171,7 +171,7 @@ $(".drawRectChair_deg").addEventListener("click", function () {
 var stageLayer = stage.children[1].children;
 var totalStageLayer = stageLayer.length;
 
-stageLayer.forEach((element, index) => {
+stageLayer.forEach((element) => {
     element.on("mousedown", () => {
         layer.draw();
         $(".type").innerText = element.attrs.text;

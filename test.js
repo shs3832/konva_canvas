@@ -278,6 +278,7 @@ stage.add(gridLayer);
 document.querySelector(".save").addEventListener("click", function () {
     var json = stage.toJSON();
     localStorage.setItem("seatData", json);
+    alert("저장완료");
 });
 
 // document.querySelector(".load").addEventListener("click", function () {
